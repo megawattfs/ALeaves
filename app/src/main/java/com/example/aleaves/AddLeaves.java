@@ -42,6 +42,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -64,7 +65,11 @@ public class AddLeaves extends AppCompatActivity {
     protected CaptureRequest.Builder captureRequestBuilder;
     private Size imageDimension;
     private ImageReader imageReader;
+    private int time;
+    private Timestamp tsTemp;
+    private String timeStamp;
     private File file;
+    private String fileString;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private boolean mFlashSupported;
     private Handler mBackgroundHandler;
@@ -172,7 +177,15 @@ public class AddLeaves extends AppCompatActivity {
             // Orientation
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
-            final File file = new File(Environment.getExternalStorageDirectory()+"/pic.jpg");
+
+            // Save to ALeaves storage directory
+
+            time = (int) (System.currentTimeMillis());
+            tsTemp = new Timestamp(time);
+            timeStamp =  tsTemp.toString();
+            //fileString = User.getUserName() + "_" + timeStamp;
+            fileString = "megawattfs_" + timeStamp;//TODO change when user class implemented.
+            final File file = new File(Environment.getExternalStorageDirectory()+"/aleaves/"+fileString+".jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {

@@ -18,4 +18,16 @@ public class MainActivity extends AppCompatActivity {
         Intent addLeavesIntent = new Intent(this, AddLeaves.class);
         startActivity(addLeavesIntent);
     }
+    public void onClickViewLeaves(View view) {
+        Intent viewLeavesIntent = new Intent(this, ViewLeaves.class);
+        startActivity(viewLeavesIntent);
+    }
+    public void onClickLeafMap(View view) {
+        Intent leafMapIntent = new Intent(this, LeafMap.class);
+        startActivity(leafMapIntent);
+    }
+    public void onClickAbout(View view) {
+        Intent aboutIntent = new Intent(this, About.class);
+        startActivity(aboutIntent);
+    }
 }

@@ -34,7 +34,7 @@
     </com.google.android.material.appbar.AppBarLayout>
 
     <include layout="@layout/content_view_leaves" />
-
+<!--
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab"
         android:layout_width="wrap_content"
@@ -43,5 +43,6 @@
         app:layout_anchor="@id/app_bar"
         app:layout_anchorGravity="bottom|end"
         app:srcCompat="@android:drawable/ic_dialog_email" />
+TODO do we need this FAB?-->
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

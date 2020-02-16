@@ -7,11 +7,59 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".ViewLeaves"
     tools:showIn="@layout/activity_view_leaves">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="@dimen/text_margin"
-        android:text="@string/large_text" />
-
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <ImageButton
+            android:id="@+id/row1"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:scaleType="center"
+            android:src="@drawable/aleaves_background"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_margin="16dp"/>
+        <ImageButton
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:scaleType="center"
+            android:src="@drawable/aleaves_background"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            android:layout_margin="16dp"/>
+        <ImageButton
+            android:id="@+id/row2"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:scaleType="center"
+            android:src="@drawable/aleaves_background"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/row1"
+            android:layout_margin="16dp"/>
+        <ImageButton
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:scaleType="center"
+            android:src="@drawable/aleaves_background"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/row1"
+            android:layout_margin="16dp"/>
+        <ImageButton
+            android:id="@+id/row3"
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:scaleType="center"
+            android:src="@drawable/aleaves_background"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/row2"
+            android:layout_margin="16dp"/>
+        <ImageButton
+            android:layout_width="180dp"
+            android:layout_height="180dp"
+            android:scaleType="center"
+            android:src="@drawable/aleaves_background"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/row2"
+            android:layout_margin="16dp"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 </androidx.core.widget.NestedScrollView>

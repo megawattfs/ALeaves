@@ -4,6 +4,55 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".About">
+    tools:context=".About"
+    android:background="@drawable/aleaves_background">
 
+    <View
+        android:id="@+id/background_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="24dp"
+        android:background="#AAFFFFFF"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"/>
+
+    <TextView
+        android:id="@+id/title_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="48sp"
+        android:textColor="@android:color/black"
+        android:text="About ALeaves"
+        android:layout_marginTop="16dp"
+        android:textAlignment="center"
+        app:layout_constraintLeft_toLeftOf="@id/background_view"
+        app:layout_constraintRight_toRightOf="@id/background_view"
+        app:layout_constraintTop_toTopOf="@id/background_view"
+        />
+    <TextView
+        android:id="@+id/about_body1"
+        android:layout_width="328dp"
+        android:layout_height="wrap_content"
+        android:textSize="24sp"
+        android:textColor="@android:color/black"
+        android:text="ALeaves was inspired by the one and only Aly Shakoor. Aly is obsessed with leaves. He even created a group chat for his friends to share pictures of leaves. By incessantly pointing out the leaves, he reminds us to appreciate the small wonders of life. You rule Aly!"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintLeft_toLeftOf="@id/background_view"
+        app:layout_constraintTop_toBottomOf="@id/title_text"    />
+    <TextView
+        android:id="@+id/about_body2"
+        android:layout_width="328dp"
+        android:layout_height="wrap_content"
+        android:textSize="24sp"
+        android:textColor="@android:color/black"
+        android:text="To share comments and suggestions about ALeaves, contact Margaret Schrayer at margaretschrayer@gmail.com. We hope you enjoy using ALeaves and tell your friends! Each download is $1, and all proceeds go to planting trees."
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintLeft_toLeftOf="@id/background_view"
+        app:layout_constraintTop_toBottomOf="@id/about_body1"    />
+
+    <!--TODO add back button-->
 </androidx.constraintlayout.widget.ConstraintLayout>

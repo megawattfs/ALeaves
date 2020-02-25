@@ -1,31 +1,65 @@
 package com.example.aleaves;
 
 import android.os.Bundle;
-
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-
-import android.view.View;
+import android.os.Handler;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ViewLeaves extends AppCompatActivity {
-
+    private static final String TAG = "ViewLeaves";
+    private RecyclerView recyclerView;
+    private RecyclerViewAdapter recyclerViewAdapter;
+    private LinearLayoutManager linearLayoutManager;
+    private  List<String> adapterData;
+    private Handler handler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_view_leaves);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        setContentView(R.layout.activity_main);
+        handler = new Handler();
+        linearLayoutManager = new LinearLayoutManager(ViewLeaves.this);
+        // return the data object
+        adapterData = getFirstData();
+        recyclerView = (RecyclerView)findViewById(R.id.recycler_view);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerViewAdapter = new RecyclerViewAdapter(ViewLeaves.this, adapterData, recyclerView);
+        recyclerView.setAdapter(recyclerViewAdapter);
+        recyclerViewAdapter.setOnLoadMoreListener(new RecyclerViewAdapter.OnLoadMoreListener() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void onLoadMore() {
+                adapterData.add(null);
+                recyclerViewAdapter.notifyItemInserted(adapterData.size() - 1);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        adapterData.remove(adapterData.size() - 1);
+                        recyclerViewAdapter.notifyItemRemoved(adapterData.size());
+                        for (int i = 0; i < 15; i++) {
+                            adapterData.add("Item" + (adapterData.size() + 1));
+                            recyclerViewAdapter.notifyItemInserted(adapterData.size());
+                        }
+                        recyclerViewAdapter.setLoaded();
+                    }
+                }, 2000);
+                System.out.println("load");
             }
         });
+    }
+    private List<String> getFirstData(){
+        List<String> listObject = new ArrayList<String>();
+        listObject.add("one");
+        listObject.add("one");
+        listObject.add("one");
+        listObject.add("one");
+        listObject.add("one");
+        listObject.add("one");
+        listObject.add("one");
+        listObject.add("one");
+        listObject.add("one");
+        listObject.add("one");
+        return listObject;
     }
 }

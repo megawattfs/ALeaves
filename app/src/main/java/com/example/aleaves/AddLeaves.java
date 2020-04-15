@@ -1,9 +1,14 @@
 package com.example.aleaves;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.hardware.camera2.*;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.Manifest;
 import android.content.Context;
@@ -36,16 +41,28 @@ import android.widget.ImageButton;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
+import android.provider.MediaStore;
+
+import org.bson.Document;
+import org.bson.types.ObjectId;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.mongodb.stitch.core.services.mongodb.remote.RemoteInsertOneResult;
 
 public class AddLeaves extends AppCompatActivity {
     private static final String TAG = "AddLeaves";
@@ -66,14 +83,18 @@ public class AddLeaves extends AppCompatActivity {
     private Size imageDimension;
     private ImageReader imageReader;
     private int time;
-    private Timestamp tsTemp;
-    private String timeStamp;
+    private ObjectId captureId;
+    private Date timeStamp;
+    private Location lastLocation = new Location(LocationManager.GPS_PROVIDER);
+    private Bitmap imageBitmap;
     private File file;
     private String fileString;
     private static final int REQUEST_CAMERA_PERMISSION = 200;
     private boolean mFlashSupported;
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
+    private FusedLocationProviderClient fusedLocationClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,6 +110,7 @@ public class AddLeaves extends AppCompatActivity {
                 takePicture();
             }
         });
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
     }
     TextureView.SurfaceTextureListener textureListener = new TextureView.SurfaceTextureListener() {
         @Override
@@ -151,7 +173,6 @@ public class AddLeaves extends AppCompatActivity {
     }
     protected void takePicture() {
         if(null == cameraDevice) {
-            Log.e(TAG, "cameraDevice is null");
             return;
         }
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
@@ -167,7 +188,7 @@ public class AddLeaves extends AppCompatActivity {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
             }
-            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 2);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
@@ -178,14 +199,25 @@ public class AddLeaves extends AppCompatActivity {
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
 
-            // Save to ALeaves storage directory
-
+            // Save to ALeaves storage directory and write leaf capture to database
             time = (int) (System.currentTimeMillis());
-            tsTemp = new Timestamp(time);
-            timeStamp =  tsTemp.toString();
-            //fileString = User.getUserName() + "_" + timeStamp;
-            fileString = "megawattfs_" + timeStamp;//TODO change when user class implemented.
-            final File file = new File(Environment.getExternalStorageDirectory()+"/aleaves/"+fileString+".jpg");
+            timeStamp = new Date(time);
+            fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+                                lastLocation = location;
+                            }
+                            else {
+                                lastLocation = new Location(LocationManager.GPS_PROVIDER);
+                            }
+                        }
+                    });
+            captureId = new ObjectId();
+            fileString = captureId.toString();
+            final File file = new File(getApplicationContext().getFilesDir(), fileString+".jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
@@ -203,17 +235,38 @@ public class AddLeaves extends AppCompatActivity {
                     } finally {
                         if (image != null) {
                             image.close();
-                        }
+                        }//Success
                     }
                 }
                 private void save(byte[] bytes) throws IOException {
                     OutputStream output = null;
-                    try {
+                    try {//This whole block is being executed 4/14/20
                         output = new FileOutputStream(file);
                         output.write(bytes);
+                        imageBitmap = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+                        LeafCapture leafCapture = new LeafCapture(captureId, MainActivity.userId, lastLocation.toString(), timeStamp, imageBitmap);
+                        Document newItem = new Document()
+                                .append("_id", captureId)
+                                .append("owner_id", MainActivity.userId)
+                                .append("location", lastLocation.toString())
+                                .append("date", timeStamp)
+                                .append("image", leafCapture.getImageString());
+
+                        final Task<RemoteInsertOneResult> insertTask = MainActivity.all_leaves.insertOne(leafCapture);
+                        insertTask.addOnCompleteListener(new OnCompleteListener<RemoteInsertOneResult>() {
+                            @Override
+                            public void onComplete(@NonNull Task <RemoteInsertOneResult> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d("app", String.format("successfully inserted item with id %s",
+                                            task.getResult().getInsertedId()));
+                                } else {
+                                    Log.e("app", "failed to insert document with: ", task.getException());
+                                }
+                            }
+                        });
                     } finally {
                         if (null != output) {
-                            output.close();
+                            output.close();//Success
                         }
                     }
                 }

@@ -43,6 +43,7 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import android.provider.MediaStore;
 
+import org.bson.BsonObjectId;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
@@ -245,13 +246,8 @@ public class AddLeaves extends AppCompatActivity {
                         output.write(bytes);
                         imageBitmap = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
                         LeafCapture leafCapture = new LeafCapture(captureId, MainActivity.userId, lastLocation.toString(), timeStamp, imageBitmap);
-                        Document newItem = new Document()
-                                .append("_id", captureId)
-                                .append("owner_id", MainActivity.userId)
-                                .append("location", lastLocation.toString())
-                                .append("date", timeStamp)
-                                .append("image", leafCapture.getImageString());
-
+                        Log.d("mfstag", "user id: " + MainActivity.userId);
+                        Log.d("mfstag", "owner id: " + leafCapture.getOwner_id());
                         final Task<RemoteInsertOneResult> insertTask = MainActivity.all_leaves.insertOne(leafCapture);
                         insertTask.addOnCompleteListener(new OnCompleteListener<RemoteInsertOneResult>() {
                             @Override

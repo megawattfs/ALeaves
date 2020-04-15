@@ -54,11 +54,13 @@ public class MainActivity extends AppCompatActivity {
                         CodecRegistries.fromCodecs(LeafCapture.codec)));
 
         //login
-        Stitch.getDefaultAppClient().getAuth().loginWithCredential(new AnonymousCredential()).addOnCompleteListener(new OnCompleteListener<StitchUser>() {
+        client.getAuth().loginWithCredential(new AnonymousCredential()).addOnCompleteListener(new OnCompleteListener<StitchUser>() {
             @Override
             public void onComplete(@NonNull final Task<StitchUser> task) {
                 if (task.isSuccessful()) {
                     Log.d("stitch", "logged in anonymously");
+                    userId = client.getAuth().getUser().getId();//TODO does this work
+                    Log.d("stitch", "user id: " + userId);
                 } else {
                     Log.e("stitch", "failed to log in anonymously", task.getException());
                 }

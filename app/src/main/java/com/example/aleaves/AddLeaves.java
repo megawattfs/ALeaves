@@ -4,9 +4,12 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.hardware.HardwareBuffer;
 import android.hardware.camera2.*;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.hardware.camera2.params.OutputConfiguration;
+import android.hardware.camera2.params.SessionConfiguration;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
@@ -65,6 +68,8 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.mongodb.stitch.core.services.mongodb.remote.RemoteInsertOneResult;
 
+import static android.hardware.HardwareBuffer.USAGE_CPU_READ_OFTEN;
+
 public class AddLeaves extends AppCompatActivity {
     private static final String TAG = "AddLeaves";
     private ImageButton takePictureButton;
@@ -79,6 +84,7 @@ public class AddLeaves extends AppCompatActivity {
     private String cameraId;
     protected CameraDevice cameraDevice;
     protected CameraCaptureSession cameraCaptureSessions;
+    protected SessionConfiguration sessionConfiguration;
     protected CaptureRequest captureRequest;
     protected CaptureRequest.Builder captureRequestBuilder;
     private Size imageDimension;
@@ -95,9 +101,10 @@ public class AddLeaves extends AppCompatActivity {
     private Handler mBackgroundHandler;
     private HandlerThread mBackgroundThread;
     private FusedLocationProviderClient fusedLocationClient;
+    private String encodedLocation;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {//Exactly like example 6/27
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_leaves);
         textureView = (TextureView) findViewById(R.id.texture);
@@ -122,13 +129,17 @@ public class AddLeaves extends AppCompatActivity {
         @Override
         public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
             // Transform you image captured size according to the surface width and height
+            //TODO was I supposed to write something here
+            Log.d("surfaceTexture","Surface texture size changed");
         }
         @Override
         public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+            Log.d("surfaceTexture","Surface texture destroyed");
             return false;
         }
         @Override
         public void onSurfaceTextureUpdated(SurfaceTexture surface) {
+            Log.d("surfaceTexture","Surface texture updated");
         }
     };
     private final CameraDevice.StateCallback stateCallback = new CameraDevice.StateCallback() {
@@ -141,22 +152,27 @@ public class AddLeaves extends AppCompatActivity {
         }
         @Override
         public void onDisconnected(CameraDevice camera) {
+            Log.d("cameraDevice","Closing camera device due to disconnect");
             cameraDevice.close();
         }
         @Override
         public void onError(CameraDevice camera, int error) {
+            //TODO print error
+            Log.e("cdError", Integer.toString(error));
+            Log.d("cameraDevice","Closing camera device due to error");
             cameraDevice.close();
             cameraDevice = null;
         }
-    };
+    };//Exactly as example 6/27
     final CameraCaptureSession.CaptureCallback captureCallbackListener = new CameraCaptureSession.CaptureCallback() {
         @Override
         public void onCaptureCompleted(CameraCaptureSession session, CaptureRequest request, TotalCaptureResult result) {
             super.onCaptureCompleted(session, request, result);
             Toast.makeText(AddLeaves.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
             createCameraPreview();
+            Log.d("captureSession","Call to captureCallbackListener.onCaptureCompleted() complete");
         }
-    };
+    };//Exactly as example 6/27
     protected void startBackgroundThread() {
         mBackgroundThread = new HandlerThread("Camera Background");
         mBackgroundThread.start();
@@ -171,9 +187,10 @@ public class AddLeaves extends AppCompatActivity {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
+    }//Both exactly as example 6/27
     protected void takePicture() {
         if(null == cameraDevice) {
+            Log.e("takePicture","Tried to take picture but camera device is null");
             return;
         }
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
@@ -183,45 +200,53 @@ public class AddLeaves extends AppCompatActivity {
             if (characteristics != null) {
                 jpegSizes = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP).getOutputSizes(ImageFormat.JPEG);
             }
-            int width = 640;
+            int width = 640;//TODO are these the right sizes for our device?
             int height = 480;
             if (jpegSizes != null && 0 < jpegSizes.length) {
                 width = jpegSizes[0].getWidth();
                 height = jpegSizes[0].getHeight();
             }
-            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 2);
+            //TODO do we need to change newInstance() format to API 28?
+            ImageReader reader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1, HardwareBuffer.USAGE_CPU_READ_OFTEN);
             List<Surface> outputSurfaces = new ArrayList<Surface>(2);
             outputSurfaces.add(reader.getSurface());
             outputSurfaces.add(new Surface(textureView.getSurfaceTexture()));
             final CaptureRequest.Builder captureBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
+            Log.d("captureSession","Capture request created");
             captureBuilder.addTarget(reader.getSurface());
+            Log.d("captureSession","Target surface added");
             captureBuilder.set(CaptureRequest.CONTROL_MODE, CameraMetadata.CONTROL_MODE_AUTO);
+            Log.d("captureSession","Control mode set");
             // Orientation
             int rotation = getWindowManager().getDefaultDisplay().getRotation();
             captureBuilder.set(CaptureRequest.JPEG_ORIENTATION, ORIENTATIONS.get(rotation));
+            Log.d("captureSession","Orientation set");
 
-            // Save to ALeaves storage directory and write leaf capture to database
+            // Save to ALeaves storage directory and write leaf capture to database: app specific
             time = (int) (System.currentTimeMillis());
             timeStamp = new Date(time);
-            fusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
-                        @Override
-                        public void onSuccess(Location location) {
-                            // Got last known location. In some rare situations this can be null.
-                            if (location != null) {
-                                lastLocation = location;
-                            }
-                            else {
-                                lastLocation = new Location(LocationManager.GPS_PROVIDER);
-                            }
-                        }
-                    });
+            fusedLocationClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    // Got last known location. In some rare situations this can be null.
+                    if (location != null) {
+                        lastLocation = location;
+                    }
+                    else {
+                        lastLocation = new Location(LocationManager.GPS_PROVIDER);
+                    }
+                    Log.d("takePicture","Location retrieved");
+                }
+            });
             captureId = new ObjectId();
             fileString = captureId.toString();
+
+            //Example code resumes here
             final File file = new File(getApplicationContext().getFilesDir(), fileString+".jpg");
             ImageReader.OnImageAvailableListener readerListener = new ImageReader.OnImageAvailableListener() {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
+                    Log.d("takePicture","onImageAvailable() called");
                     Image image = null;
                     try {
                         image = reader.acquireLatestImage();
@@ -240,11 +265,14 @@ public class AddLeaves extends AppCompatActivity {
                     }
                 }
                 private void save(byte[] bytes) throws IOException {
+                    Log.d("takePicture","save() called");
                     OutputStream output = null;
-                    try {//This whole block is being executed 4/14/20
+                    try {
                         output = new FileOutputStream(file);
                         output.write(bytes);
+                        //TODO: Should this code be here or elsewhere?
                         imageBitmap = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+                        encodedLocation = String.format("%3.3f%3.3f", lastLocation.getLatitude(), lastLocation.getLongitude());
                         LeafCapture leafCapture = new LeafCapture(captureId, MainActivity.userId, lastLocation.toString(), timeStamp, imageBitmap);
                         Log.d("mfstag", "user id: " + MainActivity.userId);
                         Log.d("mfstag", "owner id: " + leafCapture.getOwner_id());
@@ -275,12 +303,12 @@ public class AddLeaves extends AppCompatActivity {
                     Toast.makeText(AddLeaves.this, "Saved:" + file, Toast.LENGTH_SHORT).show();
                     createCameraPreview();
                 }
-            };
+            };//Commented out because of duplicate 6/23//Reinstated 6/27. Ditto below.
             cameraDevice.createCaptureSession(outputSurfaces, new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession session) {
                     try {
-                        session.capture(captureBuilder.build(), captureListener, mBackgroundHandler);
+                        session.capture(captureBuilder.build(), captureListener, mBackgroundHandler);//changed captureListener to captureCallbackListener for debug 6/23
                     } catch (CameraAccessException e) {
                         e.printStackTrace();
                     }
@@ -289,7 +317,9 @@ public class AddLeaves extends AppCompatActivity {
                 public void onConfigureFailed(CameraCaptureSession session) {
                 }
             }, mBackgroundHandler);
+            Log.d("captureSession","Capture session successfully created in call to takePicture()");///Commented out because there is already a capture session
         } catch (CameraAccessException e) {
+            Log.d("cameraAccessException", Integer.toString(e.getReason()));
             e.printStackTrace();
         }
     }
@@ -300,27 +330,56 @@ public class AddLeaves extends AppCompatActivity {
             texture.setDefaultBufferSize(imageDimension.getWidth(), imageDimension.getHeight());
             Surface surface = new Surface(texture);
             captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+            Log.d("captureSession","Capture request created in call to createCameraPreview()");
             captureRequestBuilder.addTarget(surface);
-            cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback(){
+            Log.d("captureSession","Target surface added in call to createCameraPreview()");
+            
+            sessionConfiguration = new SessionConfiguration(SessionConfiguration.SESSION_REGULAR, Arrays.asList(new OutputConfiguration(surface)), getApplicationContext().getMainExecutor(), new CameraCaptureSession.StateCallback(){
                 @Override
                 public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
                     //The camera is already closed
                     if (null == cameraDevice) {
+                        Log.d("captureSession","CameraDevice is null");//Not printing 6/20
                         return;
                     }
                     // When the session is ready, we start displaying the preview.
                     cameraCaptureSessions = cameraCaptureSession;
                     updatePreview();
+                    Log.d("captureSession","Preview updated");
                 }
                 @Override
                 public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
                     Toast.makeText(AddLeaves.this, "Configuration change", Toast.LENGTH_SHORT).show();
+                    Log.d("captureSession","Configuration change");
                 }
-            }, null);
+            });
+            Log.d("captureSession","session configuration defined");
+            cameraDevice.createCaptureSession(sessionConfiguration);
+            Log.d("captureSession","capture session created");
+            /*cameraDevice.createCaptureSession(Arrays.asList(surface), new CameraCaptureSession.StateCallback(){
+                @Override
+                public void onConfigured(@NonNull CameraCaptureSession cameraCaptureSession) {
+                    //The camera is already closed
+                    if (null == cameraDevice) {
+                        Log.d("captureSession","CameraDevice is null");//Not printing 6/20
+                        return;
+                    }
+                    // When the session is ready, we start displaying the preview.
+                    cameraCaptureSessions = cameraCaptureSession;
+                    updatePreview();
+                    Log.d("captureSession","Preview updated");
+                }
+                @Override
+                public void onConfigureFailed(@NonNull CameraCaptureSession cameraCaptureSession) {
+                    Toast.makeText(AddLeaves.this, "Configuration change", Toast.LENGTH_SHORT).show();
+                    Log.d("captureSession","Configuration change");
+                }
+            }, null);*///Commented code left over for reference
         } catch (CameraAccessException e) {
             e.printStackTrace();
         }
     }
+
     private void openCamera() {
         CameraManager manager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
         Log.e(TAG, "is camera open");
@@ -341,6 +400,7 @@ public class AddLeaves extends AppCompatActivity {
         }
         Log.e(TAG, "openCamera X");
     }
+
     protected void updatePreview() {
         if(null == cameraDevice) {
             Log.e(TAG, "updatePreview error, return");
@@ -386,7 +446,7 @@ public class AddLeaves extends AppCompatActivity {
     @Override
     protected void onPause() {
         Log.e(TAG, "onPause");
-        //closeCamera();
+        closeCamera();
         stopBackgroundThread();
         super.onPause();
     }

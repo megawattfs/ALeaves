@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v7.widget.CardView
+<androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:id="@+id/card_view"
@@ -14,22 +14,23 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <ImageView
-            android:id="@+id/icon_image"
+            android:id="@+id/card_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/maple_leaf_white"
+            android:src="@drawable/aleaves_background"
             android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
             android:layout_marginLeft="8dp"
-            android:layout_marginTop="18dp"
+            android:layout_marginTop="8dp"
             android:adjustViewBounds="true"
             android:contentDescription="@string/app_name"/>
         <TextView
-            android:id="@+id/title_header"
+            android:id="@+id/card_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_toRightOf="@+id/icon_image"
-            android:layout_alignBaseline="@+id/icon_image"
+            android:layout_toRightOf="@+id/card_image"
+            android:layout_alignBaseline="@+id/card_image"
             android:padding="18dp"
             android:text="@string/app_name"/>
     </RelativeLayout>
-</android.support.v7.widget.CardView>
+</androidx.cardview.widget.CardView>

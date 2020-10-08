@@ -1,6 +1,8 @@
 package com.example.aleaves;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.location.Location;
 import android.os.Environment;
 import java.io.ByteArrayInputStream;
@@ -36,6 +38,7 @@ public class LeafCapture {
     private final String location;
     private final Date date;
     private final Bitmap image;
+    private final BitmapDrawable drawable;
 
     /** Constructs a LeafCapture from a MongoDB document. */
     LeafCapture(
@@ -50,6 +53,8 @@ public class LeafCapture {
         this.location = location;
         this.date = date;
         this.image = image;
+        Resources res = MainActivity.getAppContext().getResources();
+        this.drawable = new BitmapDrawable(res, image);
     }
 
     public ObjectId get_id() {
@@ -82,6 +87,8 @@ public class LeafCapture {
         String encImage = Base64.encodeToString(bsonImage, Base64.DEFAULT);
         return encImage;
     }
+
+    public BitmapDrawable getDrawable() { return drawable; }
 
     /* Convert bson types to java types */
     static Date longToDate(long longDate) {

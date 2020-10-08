@@ -2,6 +2,7 @@ package com.example.aleaves;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -33,11 +34,14 @@ public class MainActivity extends AppCompatActivity {
     private StitchAppClient client;
     public static RemoteMongoCollection<LeafCapture> all_leaves;
     public static String userId;
+    private static Context appContext;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        MainActivity.appContext = getApplicationContext();
+
         //Initialize app client
         Stitch.initializeDefaultAppClient("aleaves-vkpjt");
         client = Stitch.getDefaultAppClient();
@@ -68,6 +72,10 @@ public class MainActivity extends AppCompatActivity {
         });
 
         userId = "";//TODO assign user ID
+    }
+
+    public static Context getAppContext() {
+        return MainActivity.appContext;
     }
 
     public void onClickAddLeaves(View view) {

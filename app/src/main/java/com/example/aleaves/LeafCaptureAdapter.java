@@ -38,7 +38,7 @@ public class LeafCaptureAdapter extends RecyclerView.Adapter<LeafCaptureAdapter.
         //binding the data with the viewholder views
         holder.textViewTitle.setText(leafCapture.getDate().toString());
         holder.imageView.setImageDrawable(leafCapture.getDrawable());
-
+        //TODO this is where we set data to views
     }
 
 
@@ -55,7 +55,7 @@ public class LeafCaptureAdapter extends RecyclerView.Adapter<LeafCaptureAdapter.
 
         public LeafCaptureViewHolder(View itemView) {
             super(itemView);
-
+            //TODO set more data here?
             textViewTitle = itemView.findViewById(R.id.card_text);
             imageView = itemView.findViewById(R.id.card_image);
         }

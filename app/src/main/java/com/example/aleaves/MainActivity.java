@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
                 .withCodecRegistry(CodecRegistries.fromRegistries(
                         BsonUtils.DEFAULT_CODEC_REGISTRY,
                         CodecRegistries.fromCodecs(LeafCapture.codec)));
+        Log.d("Main activity", "set up all_leaves");
 
         //login
         client.getAuth().loginWithCredential(new AnonymousCredential()).addOnCompleteListener(new OnCompleteListener<StitchUser>() {
